@@ -1,4 +1,4 @@
-import { TechnicalUser, SoftwareData, BaseRequestParams } from "./classes";
+import { RequestParams } from "./classes";
 import axios from "axios";
 import crypto from "crypto";
 
@@ -64,10 +64,63 @@ export function requestSignature(requestID: string, date: Date, signatureKey: st
   return signature;
 }
 
+export class RequestBuilder {
+  private requestParams: RequestParams;
+  
+  constructor(requestParams: RequestParams) {
+    this.requestParams = requestParams;
+  }
+
+  getRequest() {    
+    const request = {
+      [this.requestParams.serviceName]: {
+        $: {
+          'xmlns': 'http://schemas.nav.gov.hu/OSA/3.0/api',
+          'xmlns:common': 'http://schemas.nav.gov.hu/NTCA/1.0/common'
+        },
+        'common:header': {
+          'common:requestId': this.requestParams.requestID,
+          'common:timestamp': this.requestParams.date.toISOString(),
+          'common:requestVersion': '3.0',
+          'common:headerVersion': '1.0',
+        },
+        'common:user': {
+          'common:login': this.requestParams.user.login,
+          'common:passwordHash': {
+            $: {
+              cryptoType: 'SHA-512',
+            },
+            _: this.requestParams.user.passwordHash,
+          },
+          'common:taxNumber': this.requestParams.user.taxNumber,
+          'common:requestSignature': {
+            $: {
+              cryptoType: 'SHA3-512',
+            },
+            _: this.requestParams.user.requestSignature,
+          },
+        },
+        'software': {
+          'softwareId': this.requestParams.software.softwareId,
+          'softwareName': this.requestParams.software.softwareName,
+          'softwareOperation': this.requestParams.software.softwareOperation,
+          'softwareMainVersion': this.requestParams.software.softwareMainVersion,
+          'softwareDevName': this.requestParams.software.softwareDevName,
+          'softwareDevContact': this.requestParams.software.softwareDevContact,
+          'softwareDevCountryCode': this.requestParams.software.softwareDevCountryCode,
+          'softwareDevTaxNumber': this.requestParams.software.softwareDevTaxNumber
+        },
+      },
+    };
+
+    return request;
+  }
+}
+
 /**
  * 
  * @param requestParams kérés paraméter a BaseRequestParams alapján
  */
-export function baseRequest(requestParams: BaseRequestParams) {
+export function baseRequest(requestParams: RequestParams) {
 
 }

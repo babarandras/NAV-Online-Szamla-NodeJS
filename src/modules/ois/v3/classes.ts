@@ -1,19 +1,22 @@
+
 /** 
  * A REST API-n keresztül történő adatszolgáltatáshoz szükséges echnikai felhasználó adatai, melyet az elsődleges felhasználó hozhat létre a rendszerben
  */
-export class TechnicalUser {
+export class UserHeaderType {
+  // A technikai felhasználó login neve
   login: string;
-  password: string;
+  // A technikai felhasználó jelszóhash értéke
+  passwordHash: string;
+  // Azon adózó adószámának első 8 jegye,aki az interfész szolgáltatását igénybeveszi, és akihez a technikai felhasználótartozik  
   taxNumber: string;
-  signatureKey: string;
-  exchangeKey: string;
+  // A kérés aláírásának hash értéke
+  requestSignature: string;
 
   constructor() {
     this.login = '';
-    this.password = '';
+    this.passwordHash = '';
     this.taxNumber = '';
-    this.signatureKey = '';
-    this.exchangeKey = '';
+    this.requestSignature = '';
   }
 }
 
@@ -21,13 +24,21 @@ export class TechnicalUser {
  * A számlázóprogram adatai az Online Számla 3.0 rendszer interfész specifikációban meghatározott SoftwareType XML element alapján
  */
 export class SoftwareType {
+  // A számlázó program azonosítója
   softwareId: string;
+  // A számlázó program neve
   softwareName: string;
+  // A számlázó program működési típusa
   softwareOperation: string;
+  // A számlázó program fő verziója
   softwareMainVersion: string;
+  // A számlázó program fejlesztőjének neve
   softwareDevName: string;
+  // A számlázó program fejlesztőjének működő email címe
   softwareDevContact: string;
+  // A számlázó program fejlesztőjének országkódja
   softwareDevCountryCode: string;
+  // A számlázó program fejlesztőjének adószáma
   softwareDevTaxNumber: string;
 
   constructor() {
@@ -42,20 +53,20 @@ export class SoftwareType {
   }
 }
 
-export class BaseRequestParams {
+export class RequestParams {
   serviceName: string;
   requestID: string;
   date: Date;
-  technicalUser: TechnicalUser;
-  softwareData: SoftwareType;
+  user: UserHeaderType;  
+  software: SoftwareType;
   invoices: any;
 
   constructor() {
     this.serviceName = '';
     this.requestID = '';
     this.date = new Date();
-    this.technicalUser = new TechnicalUser();
-    this.softwareData = new SoftwareType();
+    this.user = new UserHeaderType();
+    this.software = new SoftwareType();
     this.invoices = [];
   }
 }
