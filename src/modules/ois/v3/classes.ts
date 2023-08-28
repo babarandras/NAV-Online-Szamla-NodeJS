@@ -72,7 +72,11 @@ export class SoftwareType {
 }
 
 export class RequestParams {
+  public baseURL: string;
+  public endPoint: string;
   public serviceName: string;
+  public signatureKey: string;
+  public exchangeKey: string;
   public requestID: string;
   public date: Date;
   public user: UserHeaderType;
@@ -145,12 +149,10 @@ export class RequestBuilder {
       renderOpts: { pretty: true, indent: '\t', newline: '\n' },
     });
 
-    
+    const xml = builder.buildObject(this.request);
 
+    this._requestXML = `${xml}\n`;
 
-
-
-    this._requestXML = '';
     return this._requestXML;
   }
 
