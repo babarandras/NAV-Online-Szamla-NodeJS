@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const classes_1 = require("./modules/ois/v3/classes");
 const request_utils_1 = require("./modules/ois/v3/request-utils");
+const config_1 = require("./config");
 /*const app = express();
 const port = 3000;
 
@@ -15,20 +16,20 @@ app.listen(port, () => {
 function test() {
     let requestParams = new classes_1.RequestParams();
     requestParams.baseURL = 'https://api.onlineszamla.nav.gov.hu/invoiceService/v3';
-    requestParams.signatureKey = '50-b887-0d100069ec9227AAG2M4JBU6';
-    requestParams.exchangeKey = '1fc527AAG2M5XHU7';
+    requestParams.signatureKey = config_1.OIS3_Config.signatureKey;
+    requestParams.exchangeKey = config_1.OIS3_Config.exchangeKey;
     requestParams.invoices = [];
-    requestParams.user.login = 'igsba0zdqvykqxc';
-    requestParams.user.password = 'NavXml001(!!!)';
-    requestParams.user.taxNumber = '11043924';
-    requestParams.software.softwareId = 'HUFAP1104392400001';
-    requestParams.software.softwareName = 'NAV Online Invoice Tester';
-    requestParams.software.softwareOperation = 'LOCAL_SOFTWARE';
-    requestParams.software.softwareMainVersion = '1.0';
-    requestParams.software.softwareDevName = 'Babar András';
-    requestParams.software.softwareDevContact = 'navxml@mezohegyesbirtok.hu';
-    requestParams.software.softwareDevCountryCode = 'HU';
-    requestParams.software.softwareDevTaxNumber = '11043924';
+    requestParams.user.login = config_1.OIS3_Config.user.login;
+    requestParams.user.password = config_1.OIS3_Config.user.password;
+    requestParams.user.taxNumber = config_1.OIS3_Config.user.taxNumber;
+    requestParams.software.softwareId = config_1.OIS3_Config.software.softwareId;
+    requestParams.software.softwareName = config_1.OIS3_Config.software.softwareName;
+    requestParams.software.softwareOperation = config_1.OIS3_Config.software.softwareOperation;
+    requestParams.software.softwareMainVersion = config_1.OIS3_Config.software.softwareMainVersion;
+    requestParams.software.softwareDevName = config_1.OIS3_Config.software.softwareDevName;
+    requestParams.software.softwareDevContact = config_1.OIS3_Config.software.softwareDevContact;
+    requestParams.software.softwareDevCountryCode = config_1.OIS3_Config.software.softwareDevCountryCode;
+    requestParams.software.softwareDevTaxNumber = config_1.OIS3_Config.software.softwareDevTaxNumber;
     const requestID = (0, request_utils_1.newRequestID)();
     const date = new Date();
     requestParams.user.requestSignature = (0, request_utils_1.requestSignature)(requestID, date, requestParams.signatureKey);

@@ -129,5 +129,8 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+# dist files - Babar András
+dist/
+
 # config files - Babar András
 config.ts
