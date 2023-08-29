@@ -12,8 +12,6 @@ export class UserHeaderType {
   private _passwordHash: string;
   // Azon adózó adószámának első 8 jegye,aki az interfész szolgáltatását igénybeveszi, és akihez a technikai felhasználótartozik  
   public taxNumber: string;
-  // A kérés aláírásának hash értéke
-  public requestSignature: string;
 
   // jelszó megadása esetén kiszámítluk a hash értékét
   public set password(value: string) {
@@ -34,7 +32,6 @@ export class UserHeaderType {
     this.login = '';
     this.password = '';
     this.taxNumber = '';
-    this.requestSignature = '';
   }
 }
 
@@ -73,8 +70,6 @@ export class SoftwareType {
 
 export class RequestParams {
   public baseURL: string;
-  public endPoint: string;
-  public serviceName: string;
   public signatureKey: string;
   public exchangeKey: string;
   public requestID: string;
@@ -84,7 +79,9 @@ export class RequestParams {
   public invoices: any;
 
   constructor() {
-    this.serviceName = '';
+    this.baseURL = '';
+    this.signatureKey = '';
+    this.exchangeKey = '';
     this.requestID = '';
     this.date = new Date();
     this.user = new UserHeaderType();
@@ -93,71 +90,28 @@ export class RequestParams {
   }
 }
 
-export class RequestBuilder {
-  private requestParams: RequestParams;
-
-  private _request: Object;
-  public get request(): Object {
-    this._request = {
-      [this.requestParams.serviceName]: {
-        $: {
-          'xmlns': 'http://schemas.nav.gov.hu/OSA/3.0/api',
-          'xmlns:common': 'http://schemas.nav.gov.hu/NTCA/1.0/common'
-        },
-        'common:header': {
-          'common:requestId': this.requestParams.requestID,
-          'common:timestamp': this.requestParams.date.toISOString(),
-          'common:requestVersion': '3.0',
-          'common:headerVersion': '1.0',
-        },
-        'common:user': {
-          'common:login': this.requestParams.user.login,
-          'common:passwordHash': {
-            $: {
-              cryptoType: 'SHA-512',
-            },
-            _: this.requestParams.user.passwordHash,
-          },
-          'common:taxNumber': this.requestParams.user.taxNumber,
-          'common:requestSignature': {
-            $: {
-              cryptoType: 'SHA3-512',
-            },
-            _: this.requestParams.user.requestSignature,
-          },
-        },
-        'software': {
-          'softwareId': this.requestParams.software.softwareId,
-          'softwareName': this.requestParams.software.softwareName,
-          'softwareOperation': this.requestParams.software.softwareOperation,
-          'softwareMainVersion': this.requestParams.software.softwareMainVersion,
-          'softwareDevName': this.requestParams.software.softwareDevName,
-          'softwareDevContact': this.requestParams.software.softwareDevContact,
-          'softwareDevCountryCode': this.requestParams.software.softwareDevCountryCode,
-          'softwareDevTaxNumber': this.requestParams.software.softwareDevTaxNumber
-        },
-      },
-    };
-    return this._request;
+export class QueryInvoiceDigestRequestParams {
+  public page: number;
+  public invoiceDirection: string;
+  public invoiceQueryParams = class {
+    mandatoryQueryParams = class {
+      invoiceIssueDate = class {
+        dateFrom: string;
+        dateTo: string;
+      };
+    }
   }
 
-  private _requestXML: any;
-  public get requestXML(): any {
-    
-    const builder = new xml2js.Builder({
-      xmldec: { version: '1.0', encoding: 'UTF-8', standalone: true },
-      renderOpts: { pretty: true, indent: '\t', newline: '\n' },
-    });
+  constructor() {
+    this.page = 1;
+    this.invoiceDirection = 'INBOUND';
 
-    const xml = builder.buildObject(this.request);
-
-    this._requestXML = `${xml}\n`;
-
-    return this._requestXML;
-  }
-
-  constructor(requestParams: RequestParams) {
-    this.requestParams = requestParams;
+    let invoiceQueryParams = new this.invoiceQueryParams;
+    let mandatoryQueryParams = new invoiceQueryParams.mandatoryQueryParams;
+    let invoiceIssueDate = new mandatoryQueryParams.invoiceIssueDate;   
+    invoiceIssueDate.dateFrom = '';
+    invoiceIssueDate.dateTo = '';
   }
 
 }
+

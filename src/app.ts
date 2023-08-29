@@ -1,5 +1,6 @@
-import { RequestParams, RequestBuilder } from "./modules/ois/v3/classes";
-import { requestSignature, newRequestID, sendRequest } from "./modules/ois/v3/request-utils";
+import { QueryInvoiceDigestRequestParams, RequestParams } from "./modules/ois/v3/classes";
+import { newRequestID, requestSignature1 } from "./modules/ois/v3/request-utils";
+import { NAVRestclient } from "./modules/ois/v3/nav-restclient";
 
 import { OIS3_Config } from "./config";
 
@@ -38,26 +39,24 @@ function test() {
   requestParams.software.softwareDevCountryCode = OIS3_Config.software.softwareDevCountryCode;
   requestParams.software.softwareDevTaxNumber = OIS3_Config.software.softwareDevTaxNumber;
 
-  const requestID = newRequestID();
-  const date = new Date();
-  requestParams.user.requestSignature = requestSignature(requestID, date, requestParams.signatureKey);
+  requestParams.requestID = newRequestID();
+  requestParams.date = new Date();
 
-  requestParams.serviceName = 'TokenExchangeRequest';
-  const builder = new RequestBuilder(requestParams);
-  const xml = builder.requestXML;
+  let client = new NAVRestclient(requestParams);
+  /*client.queryTaxpayer('11043924').then((response) => {
+    console.log(response);
+  }); */
 
-  //const response = sendRequest(requestParams);
-  
-  //console.log(response);
+  let params = new QueryInvoiceDigestRequestParams();
+  let invoiceQueryParams = new params.invoiceQueryParams;
+  let mandatoryQueryParams = new invoiceQueryParams.mandatoryQueryParams;
+  let invoiceIssueDate = new mandatoryQueryParams.invoiceIssueDate;
+  invoiceIssueDate.dateFrom = '2023-08-29';
+  invoiceIssueDate.dateTo = '2023-08-29';
 
-  requestParams.endPoint = 'tokenExchange';
-  sendRequest(requestParams).then(function (result) {
-    if (result) {
-        console.log(result)
-    }
-})
-
-
+  client.queryInvoiceDigest(params).then((response) => {
+    console.log(response);
+  });
 }
 
 test();

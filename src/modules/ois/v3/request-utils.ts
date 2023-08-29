@@ -1,14 +1,13 @@
-import { RequestParams, RequestBuilder } from "./classes";
+import { RequestParams } from "./classes";
 import axios from "axios";
 import crypto from "crypto";
 import xml2js from 'xml2js';
 import { promisify } from 'util';
-import  pkg from 'lodash';
+import pkg from 'lodash';
 
-const {pick} = pkg;
+const { pick } = pkg;
 const xmlParser = new xml2js.Parser({ explicitArray: false });
 const parseXml = promisify(xmlParser.parseString).bind(xmlParser);
-
 
 /**
  * jelszó Hash az Online Számla 3.0 rendszer interfész specifikáció alapján
@@ -32,7 +31,7 @@ export function passwordHash(password: string) {
 export function newRequestID(): string {
   const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_+';
   const patternLength = 27;
-  let requestID: string = "RID";
+  let requestID: string = 'RID';
 
   for (let i = 0; i < patternLength; i++) {
     const index = crypto.randomInt(0, characters.length);
@@ -44,15 +43,12 @@ export function newRequestID(): string {
 
 /**
  * Interface kérés aláírása a megadott paraméterek alapján
- * @param requestID Egyedi kérés azonosító, értékét a newRequestID() függvényel generálhatjuk
- * @param date A kérés időpontja, dátuma
- * @param signatureKey Aláírási kulcs
- * @param invoices Számla vagy számlák xml tartalma base64-ben
+ * 
  * @returns 
  */
-export function requestSignature(requestID: string, date: Date, signatureKey: string, invoices: any = []): string {
-  const timestamp = date.toISOString().split('.')[0].replace(/[-:T]/g, '');;
-  const invoicesChecksum = invoices
+export function requestSignature(requestParams: RequestParams): string {
+  const timestamp = `${requestParams.date.toISOString().split('.')[0]}`.replace(/[-:T]/g, '');  
+  const invoicesChecksum = requestParams.invoices
     .map((invoice: any) => {
       const hash = crypto
         .createHash('sha3-512')
@@ -64,22 +60,100 @@ export function requestSignature(requestID: string, date: Date, signatureKey: st
     .join('');
 
   const signature = crypto
-    .createHash('sha-512')
-    .update(`${requestID}${timestamp}${signatureKey}${invoicesChecksum}`)
+    .createHash('sha3-512')
+    .update(`${requestParams.requestID}${timestamp}${requestParams.signatureKey}${invoicesChecksum}`)   
     .digest('hex')
     .toUpperCase();
 
   return signature;
 }
 
-/**
- * 
- * @param requestParams 
- */
-export async function sendRequest(requestParams: RequestParams) {
-  const { baseURL, endPoint } = requestParams;
-  const builder = new RequestBuilder(requestParams);
-  const requestXML = builder.requestXML;
+export function requestSignature1(requestID: string, date: string, signatureKey: string, invoices: any = []): string { 
+
+  const hash = crypto.createHash('sha3-512');
+  hash.update(`${requestID}${date}${signatureKey}`);
+  const val = hash.digest('hex').toUpperCase();  
+  return val;
+    
+}
+
+export class RequestBuilder {
+
+  private serviceName: string;
+  private requestParams: RequestParams;
+  private requestSign: string;
+
+  constructor(serviceName: string, requestParams: RequestParams) {
+    this.serviceName = serviceName;
+    this.requestParams = requestParams;
+    this.requestSign = requestSignature(requestParams);
+  }
+
+  private _request: any;
+  public set request(theRequest: any) {
+    this._request = theRequest;
+  };
+  public get request(): any {
+    this._request = {
+      [this.serviceName]: {
+        $: {
+          'xmlns': 'http://schemas.nav.gov.hu/OSA/3.0/api',
+          'xmlns:common': 'http://schemas.nav.gov.hu/NTCA/1.0/common'
+        },
+        'common:header': {
+          'common:requestId': this.requestParams.requestID,
+          'common:timestamp': this.requestParams.date.toISOString(),
+          'common:requestVersion': '3.0',
+          'common:headerVersion': '1.0',
+        },
+        'common:user': {
+          'common:login': this.requestParams.user.login,
+          'common:passwordHash': {
+            $: {
+              cryptoType: 'SHA-512',
+            },
+            _: this.requestParams.user.passwordHash,
+          },
+          'common:taxNumber': this.requestParams.user.taxNumber,
+          'common:requestSignature': {
+            $: {
+              cryptoType: 'SHA3-512',
+            },
+            _: this.requestSign,
+          },
+        },
+        'software': {
+          'softwareId': this.requestParams.software.softwareId,
+          'softwareName': this.requestParams.software.softwareName,
+          'softwareOperation': this.requestParams.software.softwareOperation,
+          'softwareMainVersion': this.requestParams.software.softwareMainVersion,
+          'softwareDevName': this.requestParams.software.softwareDevName,
+          'softwareDevContact': this.requestParams.software.softwareDevContact,
+          'softwareDevCountryCode': this.requestParams.software.softwareDevCountryCode,
+          'softwareDevTaxNumber': this.requestParams.software.softwareDevTaxNumber
+        },
+      },
+    };
+    return this._request;
+  }
+
+  private _requestXML: any;
+  public get requestXML(): any {
+
+    const builder = new xml2js.Builder({
+      xmldec: { version: '1.0', encoding: 'UTF-8', standalone: true },
+      renderOpts: { pretty: true, indent: '\t', newline: '\n' },
+    });
+
+    const xml = builder.buildObject(this._request);
+
+    this._requestXML = `${xml}\n`;
+
+    return this._requestXML;
+  }
+}
+
+export async function sendRequest(baseURL: string, endPoint: string, requestXML: any) {
 
   // egyedi axios példány létrehozása
   const navAxios = axios.create({
@@ -159,7 +233,4 @@ export async function sendRequest(requestParams: RequestParams) {
 
     throw error;
   }
-
-
-
 }
