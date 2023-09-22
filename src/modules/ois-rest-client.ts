@@ -20,7 +20,10 @@ import {
 
 // ----------------------------------------------------------------
 
-export class NAVRestClient {
+/**
+ * 
+ */
+export class OnlineInvoiceRestClient {
   public baseURL = 'https://api.onlineszamla.nav.gov.hu/invoiceService/v3';
   public timeout = 70000;
   public signatureKey = '';
@@ -177,7 +180,7 @@ export class NAVRestClient {
 
         // ha tömörítve van a számla akkor kitömörítjük...
         if (compressedContentIndicator) {
-          // invoiceData = zlib.unzipSync(invoiceData);
+           invoiceData = zlib.unzipSync(invoiceData);
         }
 
         const xmlParser = new xml2js.Parser({ explicitArray: false });

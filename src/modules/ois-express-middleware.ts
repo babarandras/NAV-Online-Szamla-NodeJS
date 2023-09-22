@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { Request, Response, NextFunction } from 'express';
-import { NAVRestClient } from './ois-rest-client';
+import { OnlineInvoiceRestClient } from './ois-rest-client';
 import { QueryInvoiceDigestRequestParams, QueryInvoiceDataRequestParams, QueryTaxpayerRequest } from './ois-request-utils';
 
 // ----------------------------------------------------------------
@@ -19,7 +19,7 @@ function queryInvoiceDigest(req: Request, res: Response, next: NextFunction) {
   params.invoiceDirection = queryInvoiceDigestRequest.invoiceDirection;
   params.invoiceQueryParams = queryInvoiceDigestRequest.invoiceQueryParams;
 
-  const client = new NAVRestClient();
+  const client = new OnlineInvoiceRestClient();
   client.signatureKey = req.body.signatureKey;
   client.queryInvoiceDigest(params).then((response) => {
     res.send(response);
@@ -37,7 +37,7 @@ function queryInvoiceData(req: Request, res: Response, next: NextFunction) {
   params.software = queryInvoiceDataRequest.software;
   params.invoiceNumberQuery = queryInvoiceDataRequest.invoiceNumberQuery;
 
-  const client = new NAVRestClient();
+  const client = new OnlineInvoiceRestClient();
   client.signatureKey = req.body.signatureKey;
   client.queryInvoiceData(params, true).then((response) => {
     res.status(200).json(response);
@@ -55,7 +55,7 @@ function queryTaxpayer(req: Request, res: Response, next: NextFunction) {
   params.software = queryTaxpayerRequest.software;
   params.taxNumber = queryTaxpayerRequest.taxNumber;
 
-  const client = new NAVRestClient();
+  const client = new OnlineInvoiceRestClient();
   client.signatureKey = req.body.signatureKey;
   client.queryTaxpayer(params).then((response) => {
     res.status(200).json(response);
